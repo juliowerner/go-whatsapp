@@ -2,6 +2,7 @@
 package whatsapp
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -195,30 +196,45 @@ func (wac *Conn) connect() (err error) {
 }
 
 func (wac *Conn) Disconnect() (Session, error) {
+	fmt.Println("Trying to Disconnecting")
 	if !wac.connected {
+		fmt.Println("Not connected")
 		return Session{}, ErrNotConnected
 	}
 	wac.connected = false
 	wac.loggedIn = false
 
+	fmt.Println("Sending signal to close")
 	close(wac.ws.close) //signal close
+	fmt.Println("Creating timeout channel")
 	done := make(chan struct{})
+	fmt.Println("Entering wait group go routine")
 	go func() {
+		fmt.Println("Waiting Readpump and keepalive finish")
 		wac.wg.Wait()
+		fmt.Println("Readpump and keepalive finished, closing timeout channel")
 		close(done)
+		fmt.Println("Timeout channel killed")
 	}()
 	var err error
+	fmt.Println("Timeout Select")
 	select {
 	case <-done:
 	case <-time.After(wac.msgTimeout):
+		fmt.Println("Reached timeout")
 		err = wac.ws.conn.Close()
+		fmt.Printf("Websocket connection closed with err: %+v\n", err)
 	}
+	fmt.Println("Waiting timeout channel")
 	<-done
+	fmt.Println("Timeout channel closed")
 	wac.ws = nil
-
+	fmt.Println("Cleaned ws")
 	if wac.session == nil {
+		fmt.Println("Session empty")
 		return Session{}, err
 	}
+	fmt.Println("Session not empty")
 	return *wac.session, err
 }
 
@@ -248,6 +264,7 @@ func (wac *Conn) keepAlive(minIntervalMs int, maxIntervalMs int) {
 		select {
 		case <-time.After(time.Duration(interval) * time.Millisecond):
 		case <-wac.ws.close:
+			fmt.Print("keepAlive received close signal, returning")
 			return
 		}
 	}

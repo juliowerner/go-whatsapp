@@ -5,19 +5,23 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"strings"
+
 	"github.com/Rhymen/go-whatsapp/binary"
 	"github.com/Rhymen/go-whatsapp/crypto/cbc"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	"io"
-	"io/ioutil"
-	"strings"
 )
 
 func (wac *Conn) readPump() {
 	defer func() {
+		fmt.Println("Defer function")
 		wac.wg.Done()
+		fmt.Println("wait group done sent, trying to disconnect again")
 		_, _ = wac.Disconnect()
+		fmt.Println("Disconnected")
 	}()
 
 	var readErr error
@@ -29,23 +33,32 @@ func (wac *Conn) readPump() {
 		go func() {
 			msgType, reader, readErr = wac.ws.conn.NextReader()
 			close(readerFound)
+			fmt.Println("New message to read")
 		}()
 		select {
 		case <-readerFound:
 			if readErr != nil {
+				fmt.Println("Error receiving message")
 				wac.handle(&ErrConnectionFailed{Err: readErr})
+				fmt.Println("Error receiving message killing read pump")
 				return
 			}
+			fmt.Println("Reading message")
 			msg, err := ioutil.ReadAll(reader)
 			if err != nil {
+				fmt.Println("Error reading message")
 				wac.handle(errors.Wrap(err, "error reading message from Reader"))
+				fmt.Println("Error reading continuing")
 				continue
 			}
+			fmt.Println("Processing Message")
 			err = wac.processReadData(msgType, msg)
 			if err != nil {
+				fmt.Println("Error Processing Message")
 				wac.handle(errors.Wrap(err, "error processing data"))
 			}
 		case <-wac.ws.close:
+			fmt.Println("Read pump received close signal, returning")
 			return
 		}
 	}
