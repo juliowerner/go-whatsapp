@@ -57,6 +57,7 @@ func (wac *Conn) readPump() {
 				fmt.Println("Error Processing Message")
 				wac.handle(errors.Wrap(err, "error processing data"))
 			}
+			fmt.Println("Processing Message Done")
 		case <-wac.ws.close:
 			fmt.Println("Read pump received close signal, returning")
 			return

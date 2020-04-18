@@ -206,28 +206,11 @@ func (wac *Conn) Disconnect() (Session, error) {
 
 	fmt.Println("Sending signal to close")
 	close(wac.ws.close) //signal close
-	fmt.Println("Creating timeout channel")
-	done := make(chan struct{})
-	fmt.Println("Entering wait group go routine")
-	go func() {
-		fmt.Println("Waiting Readpump and keepalive finish")
-		wac.wg.Wait()
-		fmt.Println("Readpump and keepalive finished, closing timeout channel")
-		close(done)
-		fmt.Println("Timeout channel killed")
-	}()
-	var err error
-	fmt.Println("Timeout Select")
-	select {
-	case <-done:
-	case <-time.After(wac.msgTimeout):
-		fmt.Println("Reached timeout")
-		err = wac.ws.conn.Close()
-		fmt.Printf("Websocket connection closed with err: %+v\n", err)
-	}
-	fmt.Println("Waiting timeout channel")
-	<-done
-	fmt.Println("Timeout channel closed")
+	fmt.Println("Waiting Readpump and keepalive finish")
+	wac.wg.Wait()
+	fmt.Println("Readpump and keepalive finished, closing timeout channel")
+	err := wac.ws.conn.Close()
+	fmt.Println("websocket closed:err=", err)
 	wac.ws = nil
 	fmt.Println("Cleaned ws")
 	if wac.session == nil {
