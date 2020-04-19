@@ -23,7 +23,6 @@ func (wac *Conn) readPump() {
 		_, _ = wac.Disconnect()
 		fmt.Println("Disconnected")
 	}()
-
 	var readErr error
 	var msgType int
 	var reader io.Reader
@@ -31,6 +30,10 @@ func (wac *Conn) readPump() {
 	for {
 		readerFound := make(chan struct{})
 		go func() {
+			if wac.ws == nil {
+				fmt.Println("Read pump eror no session")
+				return
+			}
 			msgType, reader, readErr = wac.ws.conn.NextReader()
 			close(readerFound)
 			fmt.Println("New message to read")
