@@ -111,7 +111,7 @@ func (wac *Conn) queryMediaConn() (hostname, auth string, ttl int, err error) {
 		return "", "", 0, err
 	}
 
-	var resp MediaConn
+	var resp MdiaConn
 	select {
 	case r := <-ch:
 		if err = json.Unmarshal([]byte(r), &resp); err != nil {
