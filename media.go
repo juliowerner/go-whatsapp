@@ -93,7 +93,7 @@ func downloadMedia(url string) (file []byte, mac []byte, err error) {
 	return data[:n-10], data[n-10 : n], nil
 }
 
-type MdiaConn struct {
+type MediaConn struct {
 	Status    int `json:"status"`
 	MediaConn struct {
 		Auth  string `json:"auth"`
