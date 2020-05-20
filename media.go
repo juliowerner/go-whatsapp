@@ -93,7 +93,7 @@ func downloadMedia(url string) (file []byte, mac []byte, err error) {
 	return data[:n-10], data[n-10 : n], nil
 }
 
-type MdiaConn struct {
+type MediaConn struct {
 	Status    int `json:"status"`
 	MediaConn struct {
 		Auth  string `json:"auth"`
@@ -111,7 +111,7 @@ func (wac *Conn) queryMediaConn() (hostname, auth string, ttl int, err error) {
 		return "", "", 0, err
 	}
 
-	var resp MdiaConn
+	var resp MediaConn
 	select {
 	case r := <-ch:
 		if err = json.Unmarshal([]byte(r), &resp); err != nil {
